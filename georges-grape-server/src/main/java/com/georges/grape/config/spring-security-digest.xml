@@ -1,0 +1,46 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+	<!--  disable security temporarily
+	-->
+	<http pattern="/api/user/*" create-session="stateless">
+		<http-basic/>
+		<intercept-url pattern="/api/user/*" access="ROLE_ADMIN"/>
+	</http>
+
+	<http pattern="/api/group/*"  create-session="stateless" entry-point-ref="digestEntryPoint" >
+		<custom-filter ref="digestFilter" position="BASIC_AUTH_FILTER"/>
+		<intercept-url pattern="/api/group/*" access="ROLE_ADMIN"/>
+	</http>
+	
+
+	<!--to skip security, need define at least one http since we define the filter in web.xml 
+	<http security="none"></http>
+	-->
+
+	<beans:bean id="digestFilter" class="org.springframework.security.web.authentication.www.DigestAuthenticationFilter">
+	  <beans:property name="userDetailsService" ref="userService"/>
+	  <beans:property name="authenticationEntryPoint" ref="digestEntryPoint"/>
+	<!--   <property name="userCache" ref="userCache"/>  -->
+	</beans:bean>
+	
+	<beans:bean id="digestEntryPoint" class="org.springframework.security.web.authentication.www.DigestAuthenticationEntryPoint">
+	  <beans:property name="realmName" value="My Digest Secure REST-WS"/>
+	  <beans:property name="key" value="somenouncekey"/>
+	  <beans:property name="nonceValiditySeconds" value="10"/>
+	</beans:bean>
+	                    
+		
+	<authentication-manager>
+	  <authentication-provider>
+	    <user-service id="userService">
+	      <user name="admin" password="password" authorities="ROLE_USER, ROLE_ADMIN" />
+	      <user name="jsimao" password="password" authorities="ROLE_USER, ROLE_ADMIN" />
+	      <user name="joe" password="password" authorities="ROLE_GUEST" />
+	    </user-service>
+	  </authentication-provider>
+	</authentication-manager>
+
+</beans:beans>

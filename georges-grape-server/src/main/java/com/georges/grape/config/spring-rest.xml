@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
+
+	<mvc:annotation-driven>
+<!-- 		<mvc:message-converters>
+	   Default converters
+                <bean class="org.springframework.http.converter.StringHttpMessageConverter"/>
+                <bean class="org.springframework.http.converter.FormHttpMessageConverter"/>
+                <bean class="org.springframework.http.converter.ByteArrayHttpMessageConverter">
+                    <property name="supportedMediaTypes">
+                        <list>
+                            <value>image/jpeg</value>
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.springframework.http.converter.xml.SourceHttpMessageConverter"/>
+
+                Converter for images
+                <bean class="org.springframework.http.converter.BufferedImageHttpMessageConverter"/>
+
+                Handle JAXB XML objects
+                <bean id="marshallingHttpMessageConverter"
+                 class="org.springframework.http.converter.xml.MarshallingHttpMessageConverter">
+                    <constructor-arg>
+
+                        <bean id="jaxbMarshaller" class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+                            <property name="classesToBeBound">
+                                <list>
+                                    <value>com.geekcap.picturefactory.picturefactoryservice.
+                                      model.picturefolders.PictureFolders</value>
+                                    <value>com.geekcap.picturefactory.picturefactoryservice.
+                                      model.pictures.Pictures</value>
+                                </list>
+                            </property>
+                        </bean>
+                    </constructor-arg>
+                </bean>
+
+                This must come after our image converter
+                <bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter"/>
+
+		</mvc:message-converters> -->
+		</mvc:annotation-driven>
+	
+	<context:component-scan base-package="com.georges.grape.controller"/>
+	
+	<!-- Configures Handler Interceptors -->	
+	<mvc:interceptors>
+		<!-- Changes the locale when a 'locale' request parameter is sent; e.g. /?locale=de -->
+		<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor" />
+	</mvc:interceptors>
+	
+	<mvc:resources mapping="/resources/**" location="/resources/" />
+
+	<!-- Saves a locale change using a cookie -->
+	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver" />
+
+	<!-- Application Message Bundle -->
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+		<property name="basename" value="/WEB-INF/messages/messages" />
+		<property name="cacheSeconds" value="0" />
+	</bean>
+		
+				
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/views/"/>
+		<property name="suffix" value=".jsp"/>
+	</bean>
+
+
+	<bean id="multipartResolver"  
+    class="org.springframework.web.multipart.commons.CommonsMultipartResolver">  
+    <!-- 设置上传文件的最大尺寸为1MB -->  
+    <property name="maxUploadSize" value="1048576"/>  
+	</bean>  
+	
+	<bean id="notificationService" class="com.georges.grape.service.NotificationService">
+	  <property name="smtpHost" value="${mail.smtp.host}"/>
+	  <property name="smtpPort" value="${mail.smtp.port}"/>
+	  <property name="smtpUser" value="${mail.smtp.user}"/>
+	  <property name="smtpPassword" value="${mail.smtp.password}"/>
+ 	  <property name="smtpSendFrom" value="${mail.smtp.sendFrom}"/>
+ 	  <property name="emailHeaderImage" value="/resources/images/header-left.png"></property>
+	</bean>
+
+</beans>

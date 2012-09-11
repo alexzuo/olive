@@ -1,0 +1,124 @@
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:oauth2="http://www.springframework.org/schema/security/oauth2"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/security/oauth2 http://www.springframework.org/schema/security/spring-security-oauth2-1.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+	<http pattern="/oauth/token" create-session="never" authentication-manager-ref="clientAuthenticationManager">
+		<intercept-url pattern="/oauth/token" access="IS_AUTHENTICATED_FULLY" />
+		<anonymous enabled="false" />
+		<http-basic />
+		<!-- include this only if you need to authenticate clients via request parameters -->
+		<custom-filter ref="clientCredentialsTokenEndpointFilter" before="BASIC_AUTH_FILTER" />
+	</http>
+
+	<http access-denied-page="/login.jsp" access-decision-manager-ref="accessDecisionManager">
+	  <!-- <intercept-url pattern="/api/user/*" access="ROLE_USER,SCOPE_READ" /> -->
+		<intercept-url pattern="/api/group/*" access="ROLE_USER,SCOPE_READ" />
+	  <!-- <intercept-url pattern="/api/event/*" access="ROLE_USER,SCOPE_READ" />  -->
+		<intercept-url pattern="/trusted/**" access="ROLE_CLIENT,SCOPE_TRUST" />
+		<intercept-url pattern="/user/**" access="ROLE_USER,SCOPE_TRUST" />
+		<!-- This needs to be anonymous so that the auth endpoint can handle oauth errors itself -->
+		<intercept-url pattern="/oauth/authorize" access="IS_AUTHENTICATED_ANONYMOUSLY" />
+		<intercept-url pattern="/oauth/**" access="ROLE_USER" />
+		<intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY,DENY_OAUTH" />
+
+		<form-login authentication-failure-url="/login.jsp" default-target-url="/index.jsp" login-page="/login.jsp"
+			login-processing-url="/login.do" />
+		<logout  logout-success-url="/welcome.jsp" logout-url="/logout.do" />
+		<anonymous />
+		<custom-filter ref="resourceServerFilter" before="EXCEPTION_TRANSLATION_FILTER" />
+		<custom-filter ref="oauth2ClientFilter" after="EXCEPTION_TRANSLATION_FILTER" />
+	</http>
+
+	<beans:bean id="clientCredentialsTokenEndpointFilter" class="org.springframework.security.oauth2.provider.filter.ClientCredentialsTokenEndpointFilter">
+		<beans:property name="authenticationManager" ref="clientAuthenticationManager" />
+	</beans:bean>
+
+	<beans:bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
+		<beans:constructor-arg>
+			<beans:list>
+				<beans:bean class="org.springframework.security.oauth2.provider.vote.ScopeVoter" />
+				<beans:bean class="org.springframework.security.access.vote.RoleVoter" />
+				<beans:bean class="org.springframework.security.access.vote.AuthenticatedVoter" />
+			</beans:list>
+		</beans:constructor-arg>
+	</beans:bean>
+
+	<authentication-manager id="clientAuthenticationManager">
+		<authentication-provider user-service-ref="clientDetailsUserService" />
+	</authentication-manager>
+
+	<authentication-manager alias="authenticationManager">
+		<authentication-provider>
+			<user-service>
+			    <user name="public" password="public" authorities="ROLE_USER" />
+				<user name="alex" password="password" authorities="ROLE_USER" />
+				<user name="wayne" password="password" authorities="ROLE_USER" />
+			</user-service>
+		</authentication-provider>
+	</authentication-manager>
+
+	<beans:bean id="clientDetailsUserService" class="org.springframework.security.oauth2.provider.client.ClientDetailsUserDetailsService">
+		<beans:constructor-arg ref="clientDetails" />
+	</beans:bean>
+
+	<beans:bean id="tokenServices" class="org.springframework.security.oauth2.provider.token.RandomValueTokenServices">
+		<beans:property name="tokenStore">
+			<beans:bean class="org.springframework.security.oauth2.provider.token.InMemoryTokenStore" />
+		</beans:property>
+		<beans:property name="supportRefreshToken" value="true" />
+	</beans:bean>
+
+	<oauth2:authorization-server client-details-service-ref="clientDetails" token-services-ref="tokenServices">
+		<oauth2:authorization-code />
+		<oauth2:implicit />
+		<oauth2:refresh-token />
+		<oauth2:client-credentials />
+		<oauth2:password />
+	</oauth2:authorization-server>
+
+	<oauth2:resource-server id="resourceServerFilter" resource-id="sparklr" token-services-ref="tokenServices" />
+
+	<oauth2:client-details-service id="clientDetails">
+		<oauth2:client client-id="my-trusted-client" authorized-grant-types="password,authorization_code,refresh_token,implicit"
+			authorities="ROLE_CLIENT, ROLE_TRUSTED_CLIENT" scope="read,write,trust" />
+		<oauth2:client client-id="my-trusted-client-with-secret" authorized-grant-types="password,authorization_code,refresh_token,implicit"
+			secret="somesecret" authorities="ROLE_CLIENT, ROLE_TRUSTED_CLIENT" />
+		<oauth2:client client-id="my-less-trusted-client" authorized-grant-types="authorization_code,implicit"
+			authorities="ROLE_CLIENT" />
+		<oauth2:client client-id="my-client-with-registered-redirect" authorized-grant-types="authorization_code,client_credentials"
+			authorities="ROLE_CLIENT" redirect-uri="http://anywhere" scope="trust" />
+		<oauth2:client client-id="my-untrusted-client-with-registered-redirect" authorized-grant-types="authorization_code"
+			authorities="ROLE_CLIENT" redirect-uri="http://anywhere" scope="read" />
+		<oauth2:client client-id="peach" resource-ids="sparklr" authorized-grant-types="password,authorization_code,refresh_token,implicit"
+			authorities="ROLE_CLIENT" scope="read,write" secret="secret" />
+	</oauth2:client-details-service>
+
+
+	<global-method-security pre-post-annotations="enabled" proxy-target-class="true">
+		<!--you could also wire in the expression handler up at the layer of the http filters. See https://jira.springsource.org/browse/SEC-1452 -->
+		<expression-handler ref="oauthExpressionHandler" />
+	</global-method-security>
+
+	<oauth2:expression-handler id="oauthExpressionHandler" />
+
+
+	<!--apply the oauth client context -->
+	<oauth2:client id="oauth2ClientFilter" redirect-on-error="false" />
+
+	<!--define an oauth 2 resource for QQ. the 'client-id' is the App ID, and the 'client-secret' is the App Secret -->
+	<oauth2:resource id="qq" type="authorization_code" client-id="100247047" client-secret="5ecdcdb7eb373bb8cd23d7745426537a"
+		access-token-uri="https://graph.qq.com/oauth2.0/token" user-authorization-uri="https://graph.qq.com/oauth2.0/authorize"
+		scope="get_user_info"  authentication-scheme="query"  client-authentication-scheme="form"/>
+
+	<beans:bean id="qqRestTemplate" class="org.springframework.security.oauth2.client.OAuth2RestTemplate">
+		<beans:constructor-arg ref="qq" />
+	</beans:bean>
+	
+
+</beans:beans>

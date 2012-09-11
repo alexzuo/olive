@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="georges-grape-server">
+        <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
+        <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
+        <dependent-module archiveName="spring-social-qq-0.2.0.RELEASE.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/spring-social-qq/spring-social-qq">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="spring-social-weibo-0.2.0.RELEASE.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/spring-social-weibo/spring-social-weibo">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="georges-grape-data-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/georges-grape-data/georges-grape-data">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="java-output-path" value="/georges-grape-server/target/classes"/>
+        <property name="context-root" value="georges-grape-server"/>
+    </wb-module>
+</project-modules>

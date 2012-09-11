@@ -1,8 +1,10 @@
 buildscript {
     repositories {
-		mavenCentral()
-		mavenRepo url:'http://repo.springsource.org/plugins-release' 
-		mavenRepo url:'http://maven.springframework.org/milestone/'
+		
+		maven {
+			 url 'http://maven.springframework.org/milestone'
+			 url 'http://repo.springsource.org/plugins-release' 
+			 }
     }
     dependencies {
         classpath 'org.springframework.build.gradle:docbook-reference-plugin:0.1.3'
@@ -68,7 +70,6 @@ project('georges-grape-server') {
 				fileTree(dir: 'libs', include: '*.jar'),
 				'aopalliance:aopalliance:1.0',
 				"net.sf.ehcache:ehcache:$ehcacheVersion",
-				"org.cloudfoundry:cloudfoundry-runtime:0.8.1",
   				"org.springframework.social:spring-social-core:$springSocialVersion",
 				"org.codehaus.jackson:jackson-mapper-asl:$jacksonVersion",
 				"org.springframework:spring-aop:$springVersion",
@@ -79,11 +80,14 @@ project('georges-grape-server') {
 				"org.springframework:spring-tx:$springVersion",
 				"org.springframework:spring-webmvc:$springVersion",
 				"org.springframework.security:spring-security-web:$springSecurityVersion",
+				"org.springframework.security:spring-security-config:$springSecurityVersion",
+				"cglib:cglib:2.2.2",
+				"commons-codec:commons-codec:1.3",
+				'commons-fileupload:commons-fileupload:1.2.1',
 				"org.aspectj:aspectjrt:$aspectjVersion",
 				'javax.annotation:jsr250-api:1.0',
 				"org.springframework.social:spring-social-core:$springSocialVersion",
-				"javax.servlet:servlet-api:2.5",
-				"javax.servlet.jsp:jsp-api:2.1",
+				'javax.servlet:jstl:1.2',
 				"org.codehaus.jackson:jackson-mapper-asl:1.9.2",
 				"org.springframework.data:spring-data-mongodb:1.0.1.RELEASE",
 				"javax.mail:mail:1.4.3",
@@ -91,7 +95,10 @@ project('georges-grape-server') {
 				"javax.inject:javax.inject:1",
 				'javax.validation:validation-api:1.0.0.GA',
 				'org.hibernate:hibernate-validator:4.3.0.Final'
-
+				
+	providedCompile "javax.servlet:servlet-api:2.5",
+					"javax.servlet.jsp:jsp-api:2.1"
+				
 		testCompile 'commons-collections:commons-collections:3.2',
 					"org.springframework:spring-test:$springVersion",
 					"org.slf4j:jcl-over-slf4j:$slf4jVersion"
